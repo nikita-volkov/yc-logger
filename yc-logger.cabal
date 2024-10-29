@@ -1,0 +1,102 @@
+cabal-version: 3.8
+name: yc-logger
+version: 0
+category: Yandex Cloud, Logging, Logger
+synopsis: Logger according to the Yandex Cloud standard
+description:
+homepage: https://github.com/nikita-volkov/yc-logger
+bug-reports: https://github.com/nikita-volkov/yc-logger/issues
+author: Nikita Volkov <nikita.y.volkov@mail.ru>
+maintainer: Nikita Volkov <nikita.y.volkov@mail.ru>
+copyright: (c) 2024, Nikita Volkov
+license: MIT
+license-file: LICENSE
+
+source-repository head
+  type: git
+  location: git://github.com/nikita-volkov/yc-logger.git
+
+common base
+  default-language: Haskell2010
+  default-extensions:
+    ApplicativeDo
+    BangPatterns
+    BinaryLiterals
+    BlockArguments
+    ConstraintKinds
+    DataKinds
+    DefaultSignatures
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DerivingVia
+    DuplicateRecordFields
+    EmptyCase
+    EmptyDataDecls
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    HexFloatLiterals
+    ImportQualifiedPost
+    LambdaCase
+    LiberalTypeSynonyms
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NoFieldSelectors
+    NoImplicitPrelude
+    NoMonomorphismRestriction
+    NumericUnderscores
+    OverloadedLabels
+    OverloadedRecordDot
+    OverloadedStrings
+    ParallelListComp
+    PatternGuards
+    PatternSynonyms
+    QuasiQuotes
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    StrictData
+    TemplateHaskell
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+    UndecidableInstances
+    ViewPatterns
+
+common test
+  import: base
+  ghc-options:
+    -threaded
+    "-with-rtsopts=-I0 -qg"
+
+common executable
+  import: base
+  ghc-options:
+    -O2
+    -threaded
+    "-with-rtsopts=-N -I0 -qg"
+
+library
+  import: base
+  hs-source-dirs: library
+  exposed-modules: YcLogger
+  other-modules:
+    YcLogger.Processes.Printer
+    YcLogger.Processes.Printer.Compilers.Output
+
+  build-depends:
+    aeson,
+    base-prelude,
+    bytestring,
+    jsonifier,
+    ptr-poker,
+    stm ^>=2.5.3,
+    text,
