@@ -89,6 +89,7 @@ library
   hs-source-dirs: library
   exposed-modules: YcLogger
   other-modules:
+    YcLogger.Models.Domain
     YcLogger.Processes.Printer
     YcLogger.Processes.Printer.Compilers.Output
 

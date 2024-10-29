@@ -8,15 +8,15 @@ import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as Aeson.Key
 import Data.Aeson.KeyMap qualified as Aeson.KeyMap
 import Data.ByteString (ByteString)
-import Data.Text (Text)
 import Jsonifier
 import PtrPoker.Write qualified as Write
+import YcLogger.Models.Domain
 
-compile :: Output -> ByteString
+compile :: NonEmpty Record -> ByteString
 compile =
   Write.writeToByteString . outputWrite
   where
-    outputWrite :: Output -> Write.Write
+    outputWrite :: NonEmpty Record -> Write.Write
     outputWrite = foldMap recordLineWrite
 
     recordLineWrite :: Record -> Write.Write
@@ -24,24 +24,6 @@ compile =
 
     newlineWrite :: Write.Write
     newlineWrite = Write.word8 (fromIntegral (ord '\n'))
-
-type Output = NonEmpty Record
-
-data Record = Record
-  { streamName :: Text,
-    level :: Level,
-    message :: Text,
-    payload :: [(Text, Aeson.Value)]
-  }
-
-data Level
-  = TraceLevel
-  | DebugLevel
-  | InfoLevel
-  | WarnLevel
-  | ErrorLevel
-  | FatalLevel
-  deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 record :: Record -> Json
 record x =
