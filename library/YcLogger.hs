@@ -9,8 +9,9 @@ module YcLogger
     log,
 
     -- * Modification
-    setLevel,
-    raiseLevel,
+    setMinLevel,
+    raiseMinLevel,
+    nestStreamName,
 
     -- * Domain
     Level (..),
@@ -21,24 +22,36 @@ import BasePrelude hiding (log)
 import Control.Concurrent.STM
 import Data.Aeson qualified as Aeson
 import Data.Text (Text)
+import Data.Text qualified as Text
 import YcLogger.Models.Domain
 import YcLogger.Processes.Printer qualified as Printer
 
 data Service = Service
   { onlineVar :: TVar Bool,
     queue :: TBQueue Record,
-    minLevel :: Level
+    minLevel :: Level,
+    path :: [Text]
   }
 
-setLevel :: Level -> Service -> Service
-setLevel level service =
+setMinLevel :: Level -> Service -> Service
+setMinLevel level service =
   service {minLevel = level}
 
-raiseLevel :: Service -> Service
-raiseLevel service =
+raiseMinLevel :: Service -> Service
+raiseMinLevel service =
   if service.minLevel == maxBound
     then service
     else service {minLevel = succ service.minLevel}
+
+-- |
+-- Prepend a segment to a @/@-separated path that forms the stream name.
+--
+-- Keep in mind that the stream name should not exceed 63 symbols
+nestStreamName :: Text -> Service -> Service
+nestStreamName namespace service =
+  service
+    { path = namespace : service.path
+    }
 
 start :: IO Service
 start = do
@@ -60,6 +73,7 @@ start = do
   pure
     Service
       { minLevel = TraceLevel,
+        path = [],
         ..
       }
 
@@ -70,8 +84,6 @@ stop service =
 
 log ::
   Service ->
-  -- | Stream name. 1-63 symbols.
-  Text ->
   -- | Level.
   Level ->
   -- | Message.
@@ -79,7 +91,7 @@ log ::
   -- | JSON payload.
   [(Text, Aeson.Value)] ->
   IO ()
-log service streamName level message payload =
+log service level message payload =
   unless (level < service.minLevel) do
     atomically do
       online <- readTVar service.onlineVar
@@ -87,3 +99,6 @@ log service streamName level message payload =
         writeTBQueue service.queue record
   where
     record = Record {streamName, level, message, payload}
+    streamName =
+      service.path
+        & Text.intercalate "/"
