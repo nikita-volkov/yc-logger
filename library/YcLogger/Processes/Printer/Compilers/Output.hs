@@ -28,9 +28,10 @@ compile =
 type Output = NonEmpty Record
 
 data Record = Record
-  { level :: Level,
+  { streamName :: Text,
+    level :: Level,
     message :: Text,
-    payload :: Aeson.Value
+    payload :: [(Text, Aeson.Value)]
   }
 
 data Level
@@ -44,11 +45,14 @@ data Level
 
 record :: Record -> Json
 record x =
-  object
-    [ ("level", level x.level),
-      ("message", textString x.message),
-      ("payload", aesonValue x.payload)
-    ]
+  x.payload
+    & (fmap . second) aesonValue
+    & mappend
+      [ ("message/msg", textString x.message),
+        ("stream_name", textString x.streamName),
+        ("level", level x.level)
+      ]
+    & object
 
 level :: Level -> Json
 level =

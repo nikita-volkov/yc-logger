@@ -69,18 +69,20 @@ stop service =
 
 log ::
   Service ->
+  -- | Stream name. 1-63 symbols.
+  Text ->
   -- | Level.
   Printer.Level ->
   -- | Message.
   Text ->
   -- | JSON payload.
-  Aeson.Value ->
+  [(Text, Aeson.Value)] ->
   IO ()
-log service level message payload =
+log service streamName level message payload =
   unless (level < service.minLevel) do
     atomically do
       online <- readTVar service.onlineVar
       when online do
         writeTBQueue service.queue record
   where
-    record = Printer.Record {level, message, payload}
+    record = Printer.Record {streamName, level, message, payload}
