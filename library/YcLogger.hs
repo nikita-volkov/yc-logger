@@ -22,7 +22,6 @@ import BasePrelude hiding (log)
 import Control.Concurrent.STM
 import Data.Aeson qualified as Aeson
 import Data.Text (Text)
-import Data.Text qualified as Text
 import YcLogger.Models.Domain
 import YcLogger.Processes.Printer qualified as Printer
 
@@ -30,7 +29,7 @@ data Service = Service
   { onlineVar :: TVar Bool,
     queue :: TBQueue Record,
     minLevel :: Level,
-    path :: [Text]
+    streamName :: Text
   }
 
 setMinLevel :: Level -> Service -> Service
@@ -48,9 +47,10 @@ raiseMinLevel service =
 --
 -- Keep in mind that the stream name should not exceed 63 symbols
 nestStreamName :: Text -> Service -> Service
-nestStreamName namespace service =
-  service
-    { path = namespace : service.path
+nestStreamName namespace Service {..} =
+  Service
+    { streamName = mconcat [namespace, "/", streamName],
+      ..
     }
 
 start :: IO Service
@@ -73,7 +73,7 @@ start = do
   pure
     Service
       { minLevel = TraceLevel,
-        path = [],
+        streamName = "/",
         ..
       }
 
@@ -98,7 +98,10 @@ log service level message payload =
       when online do
         writeTBQueue service.queue record
   where
-    record = Record {streamName, level, message, payload}
-    streamName =
-      service.path
-        & Text.intercalate "/"
+    record =
+      Record
+        { streamName = service.streamName,
+          level,
+          message,
+          payload
+        }
