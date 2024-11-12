@@ -22,4 +22,5 @@ run Deps {..} =
         Nothing -> pure ()
         Just records -> do
           ByteString.hPutStr stderr (OutputCompiler.compile records)
+          hFlush stderr
           go
