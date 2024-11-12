@@ -49,7 +49,7 @@ raiseMinLevel service =
 nestStreamName :: Text -> Service -> Service
 nestStreamName namespace Service {..} =
   Service
-    { streamName = mconcat ["/", namespace, streamName],
+    { streamName = mconcat [streamName, namespace, "/"],
       ..
     }
 
